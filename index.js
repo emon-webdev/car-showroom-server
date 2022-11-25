@@ -17,25 +17,62 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
-async function run(){
-try{
-  //save user api
-  const usersCollection = client.db('car_showroom').collection('users');
+async function run() {
+  try {
+    //save user api
+    const usersCollection = client.db("car_showroom").collection("users");
+    const productsCollection = client.db("car_showroom").collection("products");
+
+    //users post db
+    app.post("/users", async (req, res) => {
+      const newUser = req.body;
+      console.log(newUser);
+      const query = { email: newUser.email };
+      const user = await usersCollection.findOne(query);
+      if (!user) {
+        const result = usersCollection.insertOne(newUser);
+        return res.send(result);
+      }
+      res.send("already store data");
+    });
 
 
-  app.post('/users', async(req, res) => {
-    const user = req.body;
-    console.log(user);
-    const result = await usersCollection.insertOne(user);
-    res.send(result);
-  })
+    // all product post db
+    app.post("/products", async (req, res) => {
+      const product = req.body;
+      console.log(product);
+      const query = { email: product.email };
+      const user = await usersCollection.findOne(query);
+      if (user.role == "Seller") {
+        const result = await productsCollection.insertOne(product);
+        return res.send(result);
+      }
+      res.status(401).send({ message: "unauthorize access" });
+    });
 
-}finally{
 
-}
+
+
+
+
+
+
+
+
+
+    // get all products
+    // app.get("/products", async (req, res) => {
+    //   const email = req.query.email;
+    //   const query = { email: email };
+    //   const products = await productsCollection.find(query).toArray();
+    //   res.send(products);
+    // });
+
+
+  } finally {
+  }
 }
 run().catch((error) => console.error(error));
-
 
 app.get("/", (req, res) => {
   res.send("Car Showroom  Service is Running...");
