@@ -36,7 +36,6 @@ async function run() {
       res.send("already store data");
     });
 
-
     // all product post db
     app.post("/products", async (req, res) => {
       const product = req.body;
@@ -49,26 +48,14 @@ async function run() {
       }
       res.status(401).send({ message: "unauthorize access" });
     });
-
-
-
-
-
-
-
-
-
-
-
+ 
     // get all products
-    // app.get("/products", async (req, res) => {
-    //   const email = req.query.email;
-    //   const query = { email: email };
-    //   const products = await productsCollection.find(query).toArray();
-    //   res.send(products);
-    // });
-
-
+    app.get("/products", async (req, res) => {
+      const email = req.query.email;
+      const query = {email};
+      const products = await productsCollection.find(query).toArray();
+      res.send(products);
+    });
   } finally {
   }
 }
