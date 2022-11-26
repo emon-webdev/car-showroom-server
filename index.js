@@ -22,6 +22,18 @@ async function run() {
     //save user api
     const usersCollection = client.db("car_showroom").collection("users");
     const productsCollection = client.db("car_showroom").collection("products");
+    const advertisesCollection = client
+      .db("car_showroom")
+      .collection("advertises");
+
+    //send category products client
+    app.get("/category/:category", async (req, res) => {
+      const category = req.params.category;
+      console.log(category);
+      const query = { category };
+      const products = await productsCollection.find(query).toArray();
+      res.send(products);
+    });
 
     //users post db
     app.post("/users", async (req, res) => {
@@ -39,7 +51,6 @@ async function run() {
     // all product post db
     app.post("/products", async (req, res) => {
       const product = req.body;
-      console.log(product);
       const query = { email: product.email };
       const user = await usersCollection.findOne(query);
       if (user.role == "Seller") {
@@ -48,13 +59,48 @@ async function run() {
       }
       res.status(401).send({ message: "unauthorize access" });
     });
- 
-    // get all products
+
+    // get all products (for my products)
     app.get("/products", async (req, res) => {
       const email = req.query.email;
-      const query = {email};
+      const query = { email: email };
+      console.log(email);
       const products = await productsCollection.find(query).toArray();
       res.send(products);
+    });
+
+    //delete review from my reviews
+    app.delete("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //advertises post db
+    app.post("/advertises", async (req, res) => {
+      const advertise = req.body;
+      console.log(advertise);
+      const result = await advertisesCollection.insertOne(advertise);
+      res.send(result);
+    });
+
+    //all  advertises
+    app.get("/advertises", async (req, res) => {
+      const query = {};
+      const users = await advertisesCollection.find(query).toArray();
+      res.send(users);
+    });
+
+    //categories
+    app.get("/categories", async (req, res) => {
+      const query = {};
+      const brands = await productsCollection
+        .find(query)
+        .project({ category: 1 })
+        .toArray();
+      console.log(brands);
+      res.send(brands);
     });
   } finally {
   }
