@@ -22,9 +22,9 @@ async function run() {
     //save user api
     const usersCollection = client.db("car_showroom").collection("users");
     const productsCollection = client.db("car_showroom").collection("products");
-    const advertisesCollection = client
-      .db("car_showroom")
-      .collection("advertises");
+    // const advertisesCollection = client
+    //   .db("car_showroom")
+    //   .collection("advertises");
 
     //send category products client
     app.get("/category/:category", async (req, res) => {
@@ -64,7 +64,6 @@ async function run() {
     app.get("/products", async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
-      console.log(email);
       const products = await productsCollection.find(query).toArray();
       res.send(products);
     });
@@ -77,18 +76,27 @@ async function run() {
       res.send(result);
     });
 
-    //advertises post db
-    app.post("/advertises", async (req, res) => {
+    app.put("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
       const advertise = req.body;
-      console.log(advertise);
-      const result = await advertisesCollection.insertOne(advertise);
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: advertise,
+      };
+      const result = await productsCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
       res.send(result);
     });
 
     //all  advertises
     app.get("/advertises", async (req, res) => {
-      const query = {};
-      const users = await advertisesCollection.find(query).toArray();
+      const query = {advertise: true};
+      const users = await productsCollection.find(query).toArray();
       res.send(users);
     });
 
