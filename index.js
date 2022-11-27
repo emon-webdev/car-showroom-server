@@ -22,9 +22,6 @@ async function run() {
     //save user api
     const usersCollection = client.db("car_showroom").collection("users");
     const productsCollection = client.db("car_showroom").collection("products");
-    // const advertisesCollection = client
-    //   .db("car_showroom")
-    //   .collection("advertises");
 
     //send category products client
     app.get("/category/:category", async (req, res) => {
@@ -46,6 +43,13 @@ async function run() {
         return res.send(result);
       }
       res.send("already store data");
+    });
+
+    //all user get
+    app.get("/users", async (req, res) => {
+      const query = {};
+      const users = await usersCollection.find(query).toArray();
+      res.send(users);
     });
 
     // all product post db
@@ -95,7 +99,7 @@ async function run() {
 
     //all  advertises
     app.get("/advertises", async (req, res) => {
-      const query = {advertise: true};
+      const query = { advertise: true };
       const users = await productsCollection.find(query).toArray();
       res.send(users);
     });
