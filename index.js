@@ -52,6 +52,60 @@ async function run() {
       res.send(users);
     });
 
+    //all user put
+    app.put("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const admin = req.body;
+      const query = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: admin,
+      };
+      const result = await usersCollection.updateOne(
+        query,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
+
+    //delete review from my reviews
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //all buyer
+    app.get("/allBuyer", async (req, res) => {
+      const query = { role: "buyer" };
+      const buyer = await usersCollection.find(query).toArray();
+      res.send(buyer);
+    });
+    //all buyer
+    app.get("/allSeller", async (req, res) => {
+      const query = { role: "Seller" };
+      const seller = await usersCollection.find(query).toArray();
+      res.send(seller);
+    });
+
+    app.put("/products", async (req, res) => {
+      const email = req.query.email;
+      const verifyUser = req.body;
+      const filter = { email };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: verifyUser,
+      };
+      const result = await productsCollection.updateMany(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
+
     // all product post db
     app.post("/products", async (req, res) => {
       const product = req.body;
@@ -102,6 +156,19 @@ async function run() {
       const query = { advertise: true };
       const users = await productsCollection.find(query).toArray();
       res.send(users);
+    });
+    //all  reported
+    app.get("/report", async (req, res) => {
+      const query = { report: true };
+      const users = await productsCollection.find(query).toArray();
+      res.send(users);
+    });
+    //all  reported de
+    app.delete("/report/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productsCollection.deleteOne(query);
+      res.send(result);
     });
 
     //categories
