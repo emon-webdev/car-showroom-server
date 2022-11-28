@@ -133,7 +133,7 @@ async function run() {
       const result = await productsCollection.deleteOne(query);
       res.send(result);
     });
-
+    //update advertise
     app.put("/products/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
