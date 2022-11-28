@@ -22,6 +22,14 @@ async function run() {
     //save user api
     const usersCollection = client.db("car_showroom").collection("users");
     const productsCollection = client.db("car_showroom").collection("products");
+    const bookingsCollection = client.db("car_showroom").collection("bookings");
+
+    //users post db
+    app.post("/bookings", async (req, res) => {
+      const bookedProduct = req.body;
+      const result = await bookingsCollection.insertOne(bookedProduct);
+      res.send(result);
+    });
 
     //send category products client
     app.get("/category/:category", async (req, res) => {
@@ -88,6 +96,13 @@ async function run() {
       const query = { role: "Seller" };
       const seller = await usersCollection.find(query).toArray();
       res.send(seller);
+    });
+
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isAdmin: user?.role === "admin" });
     });
 
     app.put("/products", async (req, res) => {
