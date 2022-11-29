@@ -40,14 +40,14 @@ async function run() {
       const query = { category };
       const allProduct = await productsCollection.find(query).toArray();
       const availableProducts = allProduct.filter((product) => !product.booked);
-      console.log(availableProducts);
+
       res.send(availableProducts);
     });
 
     //users post db
     app.post("/bookings", async (req, res) => {
       const bookedProduct = req.body;
-      console.log(bookedProduct);
+
       const result = await bookingsCollection.insertOne(bookedProduct);
       res.send(result);
     });
