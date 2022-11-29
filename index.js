@@ -23,6 +23,26 @@ async function run() {
     const usersCollection = client.db("car_showroom").collection("users");
     const productsCollection = client.db("car_showroom").collection("products");
     const bookingsCollection = client.db("car_showroom").collection("bookings");
+    const categoriesCollection = client
+      .db("car_showroom")
+      .collection("categories");
+
+    app.get("/category/:category", async (req, res) => {
+      const category = req.params.category;
+      const query = { category };
+      const categoryName = await categoriesCollection.findOne(query);
+      res.send(categoryName);
+    });
+
+    //send category products client
+    app.get("/products/:category", async (req, res) => {
+      const category = req.params.category;
+      const query = { category };
+      const allProduct = await productsCollection.find(query).toArray();
+      const availableProducts = allProduct.filter((product) => !product.booked);
+      console.log(availableProducts);
+      res.send(availableProducts);
+    });
 
     //users post db
     app.post("/bookings", async (req, res) => {
@@ -33,10 +53,16 @@ async function run() {
     });
 
     //send category products client
-    app.get("/bookings", async (req, res) => {
-      const email = req.query.email;
-      console.log(email);
-      const query = { email: email };
+    app.get("/bookings/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { buyerEmail: email };
+      const products = await bookingsCollection.find(query).toArray();
+      res.send(products);
+    });
+    //send category products client
+    app.get("/bookingsSeller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { sellerEmail: email };
       const products = await bookingsCollection.find(query).toArray();
       res.send(products);
     });
@@ -47,14 +73,6 @@ async function run() {
       const query = { _id: ObjectId(id) };
       const booking = await bookingsCollection.findOne(query);
       res.send(booking);
-    });
-
-    //send category products client
-    app.get("/category/:category", async (req, res) => {
-      const category = req.params.category;
-      const query = { category };
-      const products = await productsCollection.find(query).toArray();
-      res.send(products);
     });
 
     //users post db
@@ -197,8 +215,12 @@ async function run() {
     //all  advertises
     app.get("/advertises", async (req, res) => {
       const query = { advertise: true };
-      const users = await productsCollection.find(query).toArray();
-      res.send(users);
+      const allAdvertises = await productsCollection.find(query).toArray();
+      const availableProducts = allAdvertises.filter(
+        (product) => !product.booked
+      );
+
+      res.send(availableProducts);
     });
     //all  reported
     app.get("/report", async (req, res) => {
