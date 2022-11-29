@@ -27,14 +27,31 @@ async function run() {
     //users post db
     app.post("/bookings", async (req, res) => {
       const bookedProduct = req.body;
+      console.log(bookedProduct);
       const result = await bookingsCollection.insertOne(bookedProduct);
       res.send(result);
     });
 
     //send category products client
+    app.get("/bookings", async (req, res) => {
+      const email = req.query.email;
+      console.log(email);
+      const query = { email: email };
+      const products = await bookingsCollection.find(query).toArray();
+      res.send(products);
+    });
+
+    //booking for payment com__
+    app.get("/bookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const booking = await bookingsCollection.findOne(query);
+      res.send(booking);
+    });
+
+    //send category products client
     app.get("/category/:category", async (req, res) => {
       const category = req.params.category;
-      console.log(category);
       const query = { category };
       const products = await productsCollection.find(query).toArray();
       res.send(products);
@@ -43,7 +60,6 @@ async function run() {
     //users post db
     app.post("/users", async (req, res) => {
       const newUser = req.body;
-      console.log(newUser);
       const query = { email: newUser.email };
       const user = await usersCollection.findOne(query);
       if (!user) {
@@ -105,6 +121,19 @@ async function run() {
       res.send({ isAdmin: user?.role === "admin" });
     });
 
+    app.get("/users/seller/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isSeller: user?.role === "Seller" });
+    });
+    app.get("/users/buyer/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send({ isBuyer: user?.role === "buyer" });
+    });
+
     app.put("/products", async (req, res) => {
       const email = req.query.email;
       const verifyUser = req.body;
@@ -151,7 +180,6 @@ async function run() {
     //update advertise
     app.put("/products/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const advertise = req.body;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true };
@@ -193,7 +221,6 @@ async function run() {
         .find(query)
         .project({ category: 1 })
         .toArray();
-      console.log(brands);
       res.send(brands);
     });
   } finally {
