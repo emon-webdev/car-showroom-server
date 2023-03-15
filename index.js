@@ -43,12 +43,17 @@ async function run() {
 
     // get products categories
     app.get("/products", async (req, res) => {
+      const search = req.query.search;
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
-      console.log(page, size);
-      const query = {};
+      const query = {
+        $text: {
+          $search: search,
+        },
+      };
       const products = await productsCollection
         .find(query)
+        .sort({ resalePrice: 1 })
         .skip(page * size)
         .limit(size)
         .toArray();
@@ -286,9 +291,9 @@ async function run() {
 run().catch((error) => console.error(error));
 
 app.get("/", (req, res) => {
-  res.send("Car Showroom  Service is Running...");
+  res.send("Car Showroom  Service is Running... v-2.0");
 });
 
 app.listen(Port, () => {
-  console.log(`Car Showroom  Service is Running  ${Port}`);
+  console.log(`Car Showroom  Service is Running  ${Port}` );
 });
