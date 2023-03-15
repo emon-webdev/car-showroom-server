@@ -27,27 +27,55 @@ async function run() {
       .db("car_showroom")
       .collection("categories");
 
-    app.get("/category/:category", async (req, res) => {
-      const category = req.params.category;
-      const query = { category };
+    // get all categories
+    app.get("/categories", async (req, res) => {
+      const query = {};
+      const result = await categoriesCollection.find(query).toArray();
+      res.send(result);
+    });
+    // get single  category item
+    app.get("/category/:name", async (req, res) => {
+      const name = req.params.name;
+      const query = { name };
       const categoryName = await categoriesCollection.findOne(query);
       res.send(categoryName);
     });
 
+    // get products categories
+    app.get("/products", async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      console.log(page, size);
+      const query = {};
+      const products = await productsCollection
+        .find(query)
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      //pagination
+      const count = await productsCollection.estimatedDocumentCount();
+      res.send({ count, products });
+    });
+
+    // product-details
+    app.get("/product-details/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productsCollection.findOne(query);
+      res.send(result);
+    });
     //send category products client
     app.get("/products/:category", async (req, res) => {
       const category = req.params.category;
       const query = { category };
       const allProduct = await productsCollection.find(query).toArray();
       const availableProducts = allProduct.filter((product) => !product.booked);
-
       res.send(availableProducts);
     });
 
     //users post db
     app.post("/bookings", async (req, res) => {
       const bookedProduct = req.body;
-
       const result = await bookingsCollection.insertOne(bookedProduct);
       res.send(result);
     });
@@ -111,6 +139,13 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email };
+      const user = await usersCollection.findOne(query);
+      res.send(user);
+    });
+
     //delete review from my reviews
     app.delete("/users/:id", async (req, res) => {
       const id = req.params.id;
@@ -137,13 +172,6 @@ async function run() {
       const query = { email };
       const user = await usersCollection.findOne(query);
       res.send({ isAdmin: user?.role === "admin" });
-    });
-
-    app.get("/user/:email", async (req, res) => {
-      const email = req.params.email;
-      const query = { email };
-      const user = await usersCollection.findOne(query);
-      res.send(user)
     });
 
     app.get("/users/seller/:email", async (req, res) => {
