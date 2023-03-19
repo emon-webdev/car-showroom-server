@@ -43,18 +43,9 @@ async function run() {
 
     // get products categories
     app.get("/products", async (req, res) => {
-      const search = req.query.search;
-      // console.log(search, typeof search);
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
       let query = {};
-      // if (search.length) {
-      //   query = {
-      //     $text: {
-      //       $search: search,
-      //     },
-      //   };
-      // }
       const products = await productsCollection
         .find(query)
         .sort()
@@ -332,7 +323,7 @@ async function run() {
 run().catch((error) => console.error(error));
 
 app.get("/", (req, res) => {
-  res.send("Car Showroom  Service is Running... v-2.0");
+  res.send("Car Showroom  Service is Running... v-2.1");
 });
 
 app.listen(Port, () => {
