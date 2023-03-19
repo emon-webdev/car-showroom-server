@@ -1,11 +1,10 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
-
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 require("dotenv").config();
-
+const stripe = require("stripe")(process.env.STRIPE_KEY);
 const Port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
@@ -26,6 +25,7 @@ async function run() {
     const categoriesCollection = client
       .db("car_showroom")
       .collection("categories");
+    const paymentsCollection = client.db("car_showroom").collection("payments");
 
     // get all categories
     app.get("/categories", async (req, res) => {
@@ -36,24 +36,28 @@ async function run() {
     // get single  category item
     app.get("/category/:name", async (req, res) => {
       const name = req.params.name;
-      const query = { name };
-      const categoryName = await categoriesCollection.findOne(query);
+      const query = { category: name };
+      const categoryName = await productsCollection.find(query).toArray();
       res.send(categoryName);
     });
 
     // get products categories
     app.get("/products", async (req, res) => {
       const search = req.query.search;
+      // console.log(search, typeof search);
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size);
-      const query = {
-        $text: {
-          $search: search,
-        },
-      };
+      let query = {};
+      // if (search.length) {
+      //   query = {
+      //     $text: {
+      //       $search: search,
+      //     },
+      //   };
+      // }
       const products = await productsCollection
         .find(query)
-        .sort({ resalePrice: 1 })
+        .sort()
         .skip(page * size)
         .limit(size)
         .toArray();
@@ -78,16 +82,61 @@ async function run() {
       res.send(availableProducts);
     });
 
+    // payment method use stripe
+    app.post("/create-payment-intent", async (req, res) => {
+      const booking = req.body;
+      const price = booking.resalePrice;
+      const amount = parseInt(price) * 100;
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const result = await paymentsCollection.insertOne(payment);
+      const id = payment.bookingId;
+      console.log(id);
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      console.log(updatedDoc, filter, id)
+      const updatedResult = await bookingsCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      console.log(updatedDoc)
+      res.send(result);
+    });
+
     //users post db
     app.post("/bookings", async (req, res) => {
       const bookedProduct = req.body;
       const result = await bookingsCollection.insertOne(bookedProduct);
       res.send(result);
     });
-
+    //booking for payment com__
+    app.get("/bookings/:id", async (req, res) => {
+      const productId = req.params.id;
+      const query = { productId };
+      const booking = await bookingsCollection.findOne(query);
+      res.send(booking);
+    });
     //send category products client
-    app.get("/bookings/:email", async (req, res) => {
-      const email = req.params.email;
+    app.get("/bookings", async (req, res) => {
+      const email = req.query.email;
       const query = { buyerEmail: email };
       const products = await bookingsCollection.find(query).toArray();
       res.send(products);
@@ -98,14 +147,6 @@ async function run() {
       const query = { sellerEmail: email };
       const products = await bookingsCollection.find(query).toArray();
       res.send(products);
-    });
-
-    //booking for payment com__
-    app.get("/bookings/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: ObjectId(id) };
-      const booking = await bookingsCollection.findOne(query);
-      res.send(booking);
     });
 
     //users post db
@@ -295,5 +336,5 @@ app.get("/", (req, res) => {
 });
 
 app.listen(Port, () => {
-  console.log(`Car Showroom  Service is Running  ${Port}` );
+  console.log(`Car Showroom  Service is Running  ${Port}`);
 });
